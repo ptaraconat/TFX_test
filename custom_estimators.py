@@ -169,6 +169,17 @@ class TFEstimatorRegressor(TFEstimator):
                                                    loss,
                                                    batch_size = batch_size, 
                                                    epochs = epochs)
+        '''
+        Arguments : 
+        model ::: TFModel object ::: Neural Network model 
+        optimizer ::: tf.keras.optimizer object::: optimizer used for updating NN 
+        weights
+        loss ::: tf.keras.loss object or str ::: loss function for computing model 
+        errors during training
+        batch_size ::: int ::: Sample size 
+        epochs ::: int ::: number of time the optimization iterates over the entire 
+        dataset
+        '''
         self.tf_model.output_layer = tf.keras.layers.Dense(units = 1, activation = 'linear')
     
     def fit(self, X, y, verbose = 0) : 
@@ -186,6 +197,67 @@ class TFEstimatorRegressor(TFEstimator):
         self.tf_model.fit(X, y, epochs = self.epochs, batch_size = self.batch_size, 
                           verbose =verbose)
         return self 
+
+class TFEstimatorClassifier(TFEstimator): 
+
+    def __init__(self,model,optimizer,loss,batch_size = 200, epochs = 100):
+        '''
+        Arguments : 
+        model ::: TFModel object ::: Neural Network model 
+        optimizer ::: tf.keras.optimizer object::: optimizer used for updating NN 
+        weights
+        loss ::: tf.keras.loss object or str ::: loss function for computing model 
+        errors during training
+        batch_size ::: int ::: Sample size 
+        epochs ::: int ::: number of time the optimization iterates over the entire 
+        dataset
+        '''
+        super(TFEstimatorRegressor, self).__init__(model, 
+                                                   optimizer, 
+                                                   loss,
+                                                   batch_size = batch_size, 
+                                                   epochs = epochs)
+        self.tf_model.output_layer = tf.keras.layers.Dense(units = 1, activation = 'linear')
+    
+    def fit(self, X, y, verbose = 0) : 
+        '''
+        Fit estimator to data 
+        Arguments : 
+        X ::: array like object [batch_size, input_shape] ::: Input data 
+        y ::: array like object [batch_size, output_dim] ::: Model targets 
+        verbose ::: int ::: 0 or 1 
+        Return : 
+        None  
+        '''
+        self.tf_model.build(X.shape)
+        self.tf_model.compile(optimizer = self.optimizer,loss = self.loss)
+        self.tf_model.fit(X, y, epochs = self.epochs, batch_size = self.batch_size, 
+                          verbose =verbose)
+        return self 
+    
+    def predict_proba(self, X): 
+        '''
+        Arguments : 
+        X ::: array like object [batch_size, input_shape] ::: Input data 
+        Return : 
+        Predictions ::: array like object [batch_size, output_dim] ::: Model 
+        prediction
+        '''
+        prediction = self.tf_model(X)
+        return prediction.numpy()
+    
+    def predict(self, X, threshold = 0.5): 
+        '''
+        Arguments : 
+        X ::: array like object [batch_size, input_shape] ::: Input data 
+        threhold ::: float ::: included in [0, 1], probability threshold for 
+        performing classification 
+        Return : 
+        Predictions ::: array like object [batch_size, output_dim] ::: Model 
+        predictions
+        '''
+        prediction = self.predict_proba(X) > threshold
+        return prediction
 
 def cross_validation(model_initializer, X, y, cross_val_approach, scoring): 
     '''
