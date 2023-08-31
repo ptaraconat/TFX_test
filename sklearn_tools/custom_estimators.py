@@ -78,25 +78,23 @@ class TFModelRegressor(TFModel):
         self.output_activation = 'linear'
         self.set_output_dim(1)
 
-class TFModelClassifier(TFModel) : 
+class TFModelClassifier(TFModel): 
     '''
     Subclass of TFModel. 
     Dedicated to Binary Classification models, ATM. 
     '''
     def __init__(self, 
-                 hidden_layers = [tf.keras.layers.Dense(units = 10, 
-                                                        activation = 'relu'),
-                                  tf.keras.layers.Dense(units = 10, 
-                                                        activation = 'relu')]):
-        super(TFModel, self).__init__(hidden_layers = hidden_layers)
+                 hidden_layers = [tf.keras.layers.Dense(units = 10, activation = 'relu'), 
+                                  tf.keras.layers.Dense(units = 10, activation = 'relu')]):
         '''
         Arguments : 
         hidden_layers ::: list of keras.layers ::: Hidden layers of the NN 
         Return : 
         None
         '''
+        super(TFModelClassifier, self).__init__(hidden_layers = hidden_layers)
         self.output_activation = 'sigmoid'
-        self.set_output_dim()
+        self.set_output_dim(1)
 
 class TFEstimator(BaseEstimator):
     ''' TensorFlow interfacer
@@ -164,11 +162,6 @@ class TFEstimator(BaseEstimator):
 class TFEstimatorRegressor(TFEstimator): 
 
     def __init__(self,model,optimizer,loss,batch_size = 200, epochs = 100):
-        super(TFEstimatorRegressor, self).__init__(model, 
-                                                   optimizer, 
-                                                   loss,
-                                                   batch_size = batch_size, 
-                                                   epochs = epochs)
         '''
         Arguments : 
         model ::: TFModel object ::: Neural Network model 
@@ -180,7 +173,12 @@ class TFEstimatorRegressor(TFEstimator):
         epochs ::: int ::: number of time the optimization iterates over the entire 
         dataset
         '''
-        self.tf_model.output_layer = tf.keras.layers.Dense(units = 1, activation = 'linear')
+        super(TFEstimatorRegressor, self).__init__(model, 
+                                                   optimizer, 
+                                                   loss,
+                                                   batch_size = batch_size, 
+                                                   epochs = epochs)
+        #self.tf_model.output_layer = tf.keras.layers.Dense(units = 1, activation = 'linear')
     
     def fit(self, X, y, verbose = 0) : 
         '''
@@ -212,12 +210,12 @@ class TFEstimatorClassifier(TFEstimator):
         epochs ::: int ::: number of time the optimization iterates over the entire 
         dataset
         '''
-        super(TFEstimatorRegressor, self).__init__(model, 
+        super(TFEstimatorClassifier, self).__init__(model, 
                                                    optimizer, 
                                                    loss,
                                                    batch_size = batch_size, 
                                                    epochs = epochs)
-        self.tf_model.output_layer = tf.keras.layers.Dense(units = 1, activation = 'linear')
+        self.tf_model.output_layer = tf.keras.layers.Dense(units = 1, activation = 'sigmoid')
     
     def fit(self, X, y, verbose = 0) : 
         '''
