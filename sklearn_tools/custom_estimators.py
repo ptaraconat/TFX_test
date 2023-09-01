@@ -1,5 +1,6 @@
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import class_weight
+from sklearn.utils.multiclass import unique_labels
 import tensorflow as tf
 import numpy as np
 
@@ -196,7 +197,7 @@ class TFEstimatorRegressor(TFEstimator):
                           verbose =verbose)
         return self
 
-class TFEstimatorClassifier(TFEstimator):
+class TFEstimatorClassifier(TFEstimator,ClassifierMixin):
 
     def __init__(self,
                  optimizer,
@@ -237,6 +238,9 @@ class TFEstimatorClassifier(TFEstimator):
         Return : 
         None  
         '''
+        # Store the classes seen during fit
+        self.classes_ = unique_labels(y)
+        print(self.classes_)
         self.tf_model.build(X.shape)
         self.tf_model.compile(optimizer = self.optimizer,loss = self.loss)
         if self.balanced_class : 
@@ -257,8 +261,11 @@ class TFEstimatorClassifier(TFEstimator):
         Predictions ::: array like object [batch_size, output_dim] ::: Model 
         prediction
         '''
-        prediction = self.tf_model(X)
-        return prediction.numpy()
+        prediction = self.tf_model(X).numpy()
+        results = np.concatenate((1-prediction, prediction), axis = 1)
+        print(prediction.shape)
+        print(results.shape)
+        return results
     
     def predict(self, X, threshold = 0.5): 
         '''
@@ -270,7 +277,7 @@ class TFEstimatorClassifier(TFEstimator):
         Predictions ::: array like object [batch_size, output_dim] ::: Model 
         predictions
         '''
-        prediction = self.predict_proba(X) > threshold
+        prediction = self.predict_proba(X)[:,1] > threshold
         return prediction
 
 def cross_validation(model_initializer, X, y, cross_val_approach, scoring): 
@@ -298,10 +305,10 @@ def cross_validation(model_initializer, X, y, cross_val_approach, scoring):
         model.fit(X_train, y_train)
  
         for key, scorer in scoring.items(): 
-            y_pred = model.predict(X_train)
-            res_dict['train_'+key].append(scorer(y_pred,y_train))
-            y_pred = model.predict(X_test)
-            res_dict['test_'+key].append(scorer(y_pred,y_test))
+            #y_pred = model.predict(X_train)
+            res_dict['train_'+key].append(scorer(model, X_train,y_train))
+            #y_pred = model.predict(X_test)
+            res_dict['test_'+key].append(scorer(model, X_test,y_test))
 
         del model
 

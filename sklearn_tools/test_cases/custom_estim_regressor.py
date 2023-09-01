@@ -2,6 +2,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import ShuffleSplit
+from sklearn.metrics import make_scorer
 import numpy as np
 import matplotlib.pyplot as plt
 import sys as sys 
@@ -41,13 +42,14 @@ def main():
     plt.show()
     # Cross validation of model performances 
     cross_val_approach = ShuffleSplit(n_splits = 10, random_state= 0)
-    scoring = {'r2' : r2_score,
-                'mse' : mean_squared_error} 
+    scoring = {'r2' : make_scorer(r2_score),
+                'mse' : make_scorer(mean_squared_error)} 
     res_dict = cross_validation(create_pipeline, X, y, cross_val_approach, scoring)
+    print(res_dict)
     print('train mean r2 ::: ', np.mean(res_dict['train_r2']))
-    print('train mean r2 ::: ', np.std(res_dict['train_r2']))
+    print('train std r2 ::: ', np.std(res_dict['train_r2']))
     print('test mean r2 ::: ', np.mean(res_dict['test_r2']))
-    print('test mean r2 ::: ', np.std(res_dict['test_r2']))
+    print('test std r2 ::: ', np.std(res_dict['test_r2']))
 
 if __name__ == '__main__':
     main()

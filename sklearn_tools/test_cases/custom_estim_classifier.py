@@ -25,7 +25,7 @@ def create_pipeline():
                          ('TF_NN', tfestimator)])
     return pipeline
 
-def main(): 
+def main():
     # Define some data 
     data = load_breast_cancer()
     X, y = data.data, data.target
@@ -43,8 +43,8 @@ def main():
     cross_val_approach = ShuffleSplit(n_splits = 10, 
                                       random_state= 0, 
                                       test_size= 0.5) 
-    scoring = {'accuracy' : accuracy_score,
-                'recall' : recall_score} 
+    #scoring = {'accuracy' : make_scorer(accuracy_score),'recall' : make_scorer(recall_score)} 
+    scoring = get_scoring()
     res_dict = cross_validation(create_pipeline, 
                                 X, y, 
                                 cross_val_approach, 
