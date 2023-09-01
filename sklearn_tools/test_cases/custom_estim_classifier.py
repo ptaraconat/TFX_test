@@ -1,3 +1,7 @@
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import ShuffleSplit
+import numpy as np
 import sys as sys 
 sys.path.append('../')
 from custom_estimators import * 
@@ -5,11 +9,16 @@ from sklearn.datasets import load_breast_cancer
 from scores_num import *
 
 def create_pipeline():
+    '''
+    '''
     optimizer = tf.keras.optimizers.Adam()
     loss = 'mse'
-    custom_model = TFModelClassifier(hidden_layers=[tf.keras.layers.Dense(units = 5, activation = 'relu'),
-                                                    tf.keras.layers.Dense(units = 5, activation = 'relu')])
-    tfestimator = TFEstimatorClassifier(custom_model, optimizer, loss, epochs= 1000)
+    hidden_layers=[tf.keras.layers.Dense(units = 5, activation = 'relu'),
+                   tf.keras.layers.Dense(units = 5, activation = 'relu')]
+    tfestimator = TFEstimatorClassifier(optimizer, 
+                                        loss, 
+                                        hidden_layers= hidden_layers, 
+                                        epochs= 1000)
     scaler = StandardScaler()
     # pipeline = make_pipeline([scaler, tfestimator]) # Doesn't work with make_pipeline, don't know why ......
     pipeline = Pipeline([('standard_scaler', scaler),
@@ -31,10 +40,15 @@ def main():
     confusion_mat = confusion_matrix(y, yhat)
     print(confusion_mat)
     # Cross validation of model performances 
-    cross_val_approach = ShuffleSplit(n_splits = 10, random_state= 0, test_size= 0.5) 
+    cross_val_approach = ShuffleSplit(n_splits = 10, 
+                                      random_state= 0, 
+                                      test_size= 0.5) 
     scoring = {'accuracy' : accuracy_score,
                 'recall' : recall_score} 
-    res_dict = cross_validation(create_pipeline, X, y, cross_val_approach, scoring)
+    res_dict = cross_validation(create_pipeline, 
+                                X, y, 
+                                cross_val_approach, 
+                                scoring)
     print('train mean accuracy ::: ', np.mean(res_dict['train_accuracy']))
     print('train mean accuracy ::: ', np.std(res_dict['train_accuracy']))
     print('test mean accuracy ::: ', np.mean(res_dict['test_accuracy']))

@@ -1,11 +1,7 @@
-from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline, Pipeline
-from sklearn.model_selection import StratifiedShuffleSplit, cross_validate, ShuffleSplit
-from sklearn.metrics import r2_score, mean_squared_error
-import tensorflow as tf 
-import numpy as np 
-import matplotlib.pyplot as plt 
+from sklearn.base import BaseEstimator
+from sklearn.utils import class_weight
+import tensorflow as tf
+import numpy as np
 
 class TFModel(tf.keras.Model):
     '''
@@ -38,14 +34,14 @@ class TFModel(tf.keras.Model):
         Return : 
         x ::: array like object [batch_size, output_dim] ::: NN Prediction
         '''
-        x = input 
-        # loop over hidden_layers list 
-        for layer in self.hidden_layers : 
+        x = input
+        # loop over hidden_layers list
+        for layer in self.hidden_layers :
             x = layer(x)
         x = self.output_layer(x)
-        return x 
+        return x
     
-    def set_output_dim(self, output_dim): 
+    def set_output_dim(self, output_dim):
         '''
         Set model output layer given the output dimension. 
         Will work only for flat output. Should ba called before building model. 
@@ -54,10 +50,10 @@ class TFModel(tf.keras.Model):
         Return : 
         None 
         '''
-        self.output_layer = tf.keras.layers.Dense(units = output_dim, 
+        self.output_layer = tf.keras.layers.Dense(units = output_dim,
                                                   activation = self.output_activation)
 
-class TFModelRegressor(TFModel): 
+class TFModelRegressor(TFModel):
     '''
     Subclass of TFModel. 
     Dedicated to Regression models. 
@@ -67,7 +63,7 @@ class TFModelRegressor(TFModel):
                  hidden_layers = [tf.keras.layers.Dense(units = 10, 
                                                         activation = 'relu'),
                                   tf.keras.layers.Dense(units = 10, 
-                                                        activation = 'relu')]): 
+                                                        activation = 'relu')]):
         '''
         Arguments : 
         hidden_layers ::: list of keras.layers ::: Hidden layers of the NN 
@@ -78,12 +74,12 @@ class TFModelRegressor(TFModel):
         self.output_activation = 'linear'
         self.set_output_dim(1)
 
-class TFModelClassifier(TFModel): 
+class TFModelClassifier(TFModel):
     '''
     Subclass of TFModel. 
     Dedicated to Binary Classification models, ATM. 
     '''
-    def __init__(self, 
+    def __init__(self,
                  hidden_layers = [tf.keras.layers.Dense(units = 10, activation = 'relu'), 
                                   tf.keras.layers.Dense(units = 10, activation = 'relu')]):
         '''
@@ -112,13 +108,13 @@ class TFEstimator(BaseEstimator):
         dataset
         '''
 
-        self.tf_model = model 
-        self.optimizer = optimizer 
+        self.tf_model = model
+        self.optimizer = optimizer
         self.loss = loss
         self.batch_size = batch_size
         self.epochs = epochs
 
-    def fit(self, X, y) : 
+    def fit(self, X, y) :
         '''
         Fit estimator to data 
         Arguments : 
@@ -131,9 +127,9 @@ class TFEstimator(BaseEstimator):
         self.tf_model.build(X.shape)
         self.tf_model.compile(optimizer = self.optimizer,loss = self.loss)
         self.tf_model.fit(X, y, epochs = self.epochs, batch_size = self.batch_size)
-        return self 
+        return self
     
-    def predict(self, X): 
+    def predict(self, X):
         '''
         Arguments : 
         X ::: array like object [batch_size, input_shape] ::: Input data 
@@ -159,12 +155,15 @@ class TFEstimator(BaseEstimator):
             setattr(self, parameter, value)
         return self
 
-class TFEstimatorRegressor(TFEstimator): 
+class TFEstimatorRegressor(TFEstimator):
 
-    def __init__(self,model,optimizer,loss,batch_size = 200, epochs = 100):
+    def __init__(self,optimizer,loss,
+                 hidden_layers = [tf.keras.layers.Dense(units = 10, activation = 'relu'),
+                                  tf.keras.layers.Dense(units = 10, activation = 'relu')],
+                 batch_size = 200, epochs = 100):
         '''
         Arguments : 
-        model ::: TFModel object ::: Neural Network model 
+        hidden_layers ::: list of keras.layers ::: Hidden layers of the NN
         optimizer ::: tf.keras.optimizer object::: optimizer used for updating NN 
         weights
         loss ::: tf.keras.loss object or str ::: loss function for computing model 
@@ -173,14 +172,15 @@ class TFEstimatorRegressor(TFEstimator):
         epochs ::: int ::: number of time the optimization iterates over the entire 
         dataset
         '''
-        super(TFEstimatorRegressor, self).__init__(model, 
-                                                   optimizer, 
+        model = TFModelRegressor(hidden_layers = hidden_layers)
+        super(TFEstimatorRegressor, self).__init__(model,
+                                                   optimizer,
                                                    loss,
-                                                   batch_size = batch_size, 
+                                                   batch_size = batch_size,
                                                    epochs = epochs)
         #self.tf_model.output_layer = tf.keras.layers.Dense(units = 1, activation = 'linear')
     
-    def fit(self, X, y, verbose = 0) : 
+    def fit(self, X, y, verbose = 0) :
         '''
         Fit estimator to data 
         Arguments : 
@@ -192,16 +192,23 @@ class TFEstimatorRegressor(TFEstimator):
         '''
         self.tf_model.build(X.shape)
         self.tf_model.compile(optimizer = self.optimizer,loss = self.loss)
-        self.tf_model.fit(X, y, epochs = self.epochs, batch_size = self.batch_size, 
+        self.tf_model.fit(X, y, epochs = self.epochs, batch_size = self.batch_size,
                           verbose =verbose)
-        return self 
+        return self
 
-class TFEstimatorClassifier(TFEstimator): 
+class TFEstimatorClassifier(TFEstimator):
 
-    def __init__(self,model,optimizer,loss,batch_size = 200, epochs = 100):
+    def __init__(self,
+                 optimizer,
+                 loss,
+                 hidden_layers = [tf.keras.layers.Dense(units = 10, activation = 'relu'),
+                                  tf.keras.layers.Dense(units = 10, activation = 'relu')],
+                 batch_size = 200,
+                 epochs = 100,
+                 balance_classes = True):
         '''
         Arguments : 
-        model ::: TFModel object ::: Neural Network model 
+        hidden_layers ::: list of keras.layers ::: Hidden layers of the NN 
         optimizer ::: tf.keras.optimizer object::: optimizer used for updating NN 
         weights
         loss ::: tf.keras.loss object or str ::: loss function for computing model 
@@ -209,15 +216,18 @@ class TFEstimatorClassifier(TFEstimator):
         batch_size ::: int ::: Sample size 
         epochs ::: int ::: number of time the optimization iterates over the entire 
         dataset
+        balance_classes ::: bool :: whether or not classes are balanced during training
         '''
-        super(TFEstimatorClassifier, self).__init__(model, 
-                                                   optimizer, 
+        self.balanced_class = balance_classes
+        model = TFModelClassifier(hidden_layers = hidden_layers)
+        super(TFEstimatorClassifier, self).__init__(model,
+                                                   optimizer,
                                                    loss,
-                                                   batch_size = batch_size, 
+                                                   batch_size = batch_size,
                                                    epochs = epochs)
-        self.tf_model.output_layer = tf.keras.layers.Dense(units = 1, activation = 'sigmoid')
+        #self.tf_model.output_layer = tf.keras.layers.Dense(units = 1, activation = 'sigmoid')
     
-    def fit(self, X, y, verbose = 0) : 
+    def fit(self, X, y, verbose = 0) :
         '''
         Fit estimator to data 
         Arguments : 
@@ -229,11 +239,17 @@ class TFEstimatorClassifier(TFEstimator):
         '''
         self.tf_model.build(X.shape)
         self.tf_model.compile(optimizer = self.optimizer,loss = self.loss)
-        self.tf_model.fit(X, y, epochs = self.epochs, batch_size = self.batch_size, 
-                          verbose =verbose)
+        if self.balanced_class : 
+            cw = class_weight.compute_class_weight('balanced',classes = np.unique(y),y = y)
+            cw = dict(zip(np.unique(y),cw))
+            self.tf_model.fit(X, y, epochs = self.epochs, batch_size = self.batch_size, 
+                              verbose = verbose, class_weight=cw)
+        else : 
+            self.tf_model.fit(X, y, epochs = self.epochs, batch_size = self.batch_size, 
+                              verbose = verbose)
         return self 
     
-    def predict_proba(self, X): 
+    def predict_proba(self, X):
         '''
         Arguments : 
         X ::: array like object [batch_size, input_shape] ::: Input data 
