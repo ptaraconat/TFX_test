@@ -21,23 +21,22 @@ x1 = np.linspace(0,1,N)
 x2 = np.linspace(0.,2,N)
 y1 = x1**2. + 4*x2
 y2 = x1*x2
-
+# Set input data for inference 
 x1_tensor = tf.constant(x1, dtype=tf.float32, name = 'x1') # For newer versions of
 x2_tensor = tf.constant(x2, dtype=tf.float32, name = 'x2') # For newer versions of
 new_shape = (N,1)
 x1_tensor = tf.reshape(x1_tensor, new_shape)
 x2_tensor = tf.reshape(x2_tensor, new_shape)
-
+# Perform inference 
 output = loaded_model([x1_tensor, x2_tensor])
-print(output)
 y1_hat = np.squeeze(output[0].numpy())
 y2_hat = np.squeeze(output[1].numpy())
-
+# Assess and print performance 
 print(y1)
 print(y1_hat)
 corr_y1 = r_regression(y1.reshape(-1,1), y1_hat.reshape(-1,1))
 print(corr_y1)
-
+#
 print(y2)
 print(y2_hat)
 corr_y2 = r_regression(y2.reshape(-1,1), y2_hat.reshape(-1,1))
