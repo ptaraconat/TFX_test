@@ -21,8 +21,8 @@ def _create_pipeline(pipeline_name: str,
   # Uses user-provided Python function that trains a model.
   trainer = tfx.components.Trainer(module_file=module_file,
                                    examples=example_gen.outputs['examples'],
-                                   train_args=tfx.proto.TrainArgs(num_steps=100),
-                                   eval_args=tfx.proto.EvalArgs(num_steps=5),
+                                   train_args=tfx.proto.TrainArgs(num_steps=1000),
+                                   eval_args=tfx.proto.EvalArgs(num_steps=10),
                                    )
 
   # Pushes the model to a filesystem destination.
