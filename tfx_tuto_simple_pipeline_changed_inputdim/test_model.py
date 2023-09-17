@@ -22,7 +22,7 @@ x2 = np.linspace(0.,2,N)
 y1 = x1**2. + 4*x2
 y2 = x1*x2
 # Set input data for inference 
-x1_tensor = tf.constant(x1, dtype=tf.float32, name = 'x1') # For newer versions of
+x1_tensor = tf.constant(x1,  name = 'x1') # For newer versions of
 x2_tensor = tf.constant(x2, dtype=tf.float32, name = 'x2') # For newer versions of
 new_shape = (N,1)
 x1_tensor = tf.reshape(x1_tensor, new_shape)
