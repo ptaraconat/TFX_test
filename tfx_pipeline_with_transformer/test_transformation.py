@@ -1,6 +1,7 @@
 import tensorflow as tf 
 import tensorflow_transform as tft 
 import numpy as np 
+import os as os 
 #from transformer import * 
 
 # Define transformation function (the same as in transformer.py)
@@ -51,6 +52,9 @@ trans_x1 = transformed_raw_data.map(lambda x: _get_column(x, 'x1'))
 trans_x2 = transformed_raw_data.map(lambda x: _get_column(x, 'x2'))
 trans_y1 = transformed_raw_data.map(lambda x: _get_column(x, 'y1'))
 trans_y2 = transformed_raw_data.map(lambda x: _get_column(x, 'y2'))
+
+print(np.all(np.array(list(raw_x1)) == np.array(list(trans_x1))))
+print(np.all(np.array(list(raw_x2)) == np.array(list(trans_x2))))
 
 print(np.all(np.array(list(raw_y1)) == np.array(list(trans_y1))))
 print(np.all(np.array(list(raw_y2)) == np.array(list(trans_y2))))
