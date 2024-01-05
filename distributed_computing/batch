@@ -1,0 +1,11 @@
+#!/bin/sh
+#SBATCH --job-name=50-100_P150-120
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH --ntasks-per-node=28
+#SBATCH --ntasks-per-core=1
+#SBATCH --partition=defq
+#SBATCH --dependency=singleton
+
+echo "Running on: $SLURM_NODELIST"
+python python_multiproc_slurm.py
