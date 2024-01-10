@@ -2,6 +2,7 @@ import multiprocessing as mp
 import numpy as np 
 import time 
 import math 
+import os 
 
 results_a = []
 results_b = []
@@ -21,7 +22,7 @@ def make_calculation_three(numbers):
 
 if __name__ == '__main__':
     number_list = list(range(5000000))
-
+    print(os.cpu_count())
     #Define processes that will run in parallel 
     p1 = mp.Process(target=make_calculation_one, args = (number_list,))
     p2 = mp.Process(target=make_calculation_two, args = (number_list,))
