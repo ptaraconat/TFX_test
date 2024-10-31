@@ -85,7 +85,7 @@ def pde(x,y,t,model):
                                grad_outputs = torch.ones_like(u_x), 
                                create_graph = True,
                                retain_graph = True)[0]
-    u_yy = torch.autograd.grad(u_y,x, 
+    u_yy = torch.autograd.grad(u_y,y, 
                                grad_outputs = torch.ones_like(u_y), 
                                create_graph = True,
                                retain_graph = True)[0]
